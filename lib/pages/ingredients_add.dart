@@ -1,7 +1,7 @@
 //susi was sadly here
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
@@ -18,16 +18,8 @@ class ingredients extends StatefulWidget {
 }
 
 class _ingredientsState extends State<ingredients> {
-  //für fetch
-  final String apiUrl = "https://trackapi.nutritionix.com/v2/search/instant";
 
-  Future<List<food>> fetchUsers() async {
-    var response = await http.get(Uri.parse(apiUrl));
-    return (json.decode(response.body)['data'] as List)
-        .map((e) => food.fromJson(e))
-        .toList();
-  //
-}
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -38,9 +30,10 @@ class _ingredientsState extends State<ingredients> {
         body: Center(
           child:Column(
             children: const [
-            name_ingredients(),
+            //name_ingredients(),
+            //typeheadsearch(),
             category_list(),
-            nutrition_table(),
+            nutrition_table(),           
              ],)      
         ),
       ),
@@ -67,13 +60,30 @@ class _ingredientsState extends State<ingredients> {
         nf_calories: json['nf_calories'],
         brand_name: json['brand_name']);
   }
+
+
+}
+
+
+Future<List<food>> fetchUsers() async {
+    String apiUrl = "https://trackapi.nutritionix.com/v2/search/instant";
+    var response = await http.get(Uri.parse(apiUrl),headers: {
+    HttpHeaders.authorizationHeader:
+        '7ff5548603c326b1bca3af594e3f437b'
+  },);
+    return (json.decode(response.body)['branded'] as List)
+        .map((e) => food.fromJson(e))
+        .toList();
+  //
 }
 
 
 
 //widgets
 
-class name_ingredients extends StatelessWidget {
+/*
+//old autocom
+class name_ingredients extends StatefulWidget {
   const name_ingredients({super.key});
 
   static const List<String> _kOptions = <String>[
@@ -83,13 +93,20 @@ class name_ingredients extends StatelessWidget {
   ];
 
   @override
+  State<name_ingredients> createState() => _name_ingredientsState();
+}
+
+class _name_ingredientsState extends State<name_ingredients> {
+
+  @override
   Widget build(BuildContext context) {
+    
     return Autocomplete<String>(
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text == '') {
           return const Iterable<String>.empty();
-        }
-        return _kOptions.where((String option) {
+        }else
+        return name_ingredients._kOptions.where((String option) {
           return option.contains(textEditingValue.text.toLowerCase());
         });
       },
@@ -99,6 +116,43 @@ class name_ingredients extends StatelessWidget {
     );
   }
 }
+/////// */
+
+//typehead
+class typeheadsearch extends StatelessWidget {
+
+
+  const typeheadsearch({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return TypeAheadField(
+  textFieldConfiguration: TextFieldConfiguration(
+    autofocus: true,
+    style: DefaultTextStyle.of(context).style.copyWith(
+      fontStyle: FontStyle.italic
+    ),
+    decoration: InputDecoration(
+      border: OutlineInputBorder()
+    )
+  ),
+  suggestionsCallback: (pattern) async {
+    return await fetchUsers();
+  },
+  itemBuilder: (context, suggestion) {
+    return ListTile(
+      leading: Icon(Icons.shopping_cart)
+    );
+  },
+  onSuggestionSelected: (suggestion) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => typeheadsearch()
+    ));
+  },
+);
+  }}
+
+//
 
 class category_list extends StatefulWidget {
   const category_list({super.key});
